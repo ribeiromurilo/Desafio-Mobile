@@ -4,36 +4,27 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AntDesign } from '@expo/vector-icons';
 import Task from '../components/Task';
 
-const CompletedTasksScreen = ({ navigation }) => {
-  const [completedTasks, setCompletedTasks] = useState([]);
+const IncompleteTasksScreen = ({ navigation }) => {
+  const [incompleteTasks, setIncompleteTasks] = useState([]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      loadCompletedTasks();
+      loadIncompleteTasks();
     });
 
     return unsubscribe;
   }, [navigation]);
 
-  const loadCompletedTasks = async () => {
+  const loadIncompleteTasks = async () => {
     try {
       const savedTasks = await AsyncStorage.getItem('tasks');
       if (savedTasks !== null) {
         const tasks = JSON.parse(savedTasks);
-        const completed = tasks.filter(task => task.completed); // Tarefas concluídas
-        setCompletedTasks(completed);
+        const incomplete = tasks.filter(task => !task.completed); // Tarefas não concluídas
+        setIncompleteTasks(incomplete);
       }
     } catch (error) {
       console.error('Erro ao carregar as tarefas:', error);
-    }
-  };
-
-  const updateCompletedTasks = async (tasks) => {
-    try {
-      const completed = tasks.filter(task => task.completed);
-      setCompletedTasks(completed);
-    } catch (error) {
-      console.error('Erro ao atualizar as tarefas concluídas:', error);
     }
   };
 
@@ -44,11 +35,11 @@ const CompletedTasksScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.titleWrapper}>
-        <AntDesign name="checkcircleo" size={24} color="black" />
-        <Text style={styles.title}>Tarefas Concluídas</Text>
+        <AntDesign name="exclamationcircleo" size={24} color="black" />
+        <Text style={styles.title}>Tarefas Não Concluídas</Text>
       </View>
       <FlatList
-        data={completedTasks}
+        data={incompleteTasks}
         renderItem={renderItem}
         keyExtractor={(item, index) => index.toString()}
         style={styles.tasksWrapper}
@@ -79,4 +70,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CompletedTasksScreen;
+export default IncompleteTasksScreen;

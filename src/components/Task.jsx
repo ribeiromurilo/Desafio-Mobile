@@ -11,7 +11,7 @@ const Task = ({ text, completed }) => {
         </View>
         <Text style={[styles.itemText, completed && styles.completedText]}>{text}</Text>
       </View>
-      <View style={styles.circular}></View>
+      <View style={[styles.circular, completed && styles.completedCircularBorder]}></View>
     </View>
   );
 };
@@ -34,8 +34,8 @@ const styles = StyleSheet.create({
   square: {
     width: 24,
     height: 24,
-    backgroundColor: '#c4aae6',
-    opacity: 0.4,
+    backgroundColor: '#E8E8E8',
+    opacity: 0.7,
     borderRadius: 5,
     marginRight: 15,
     justifyContent: 'center',
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
   },
   completedSquare: {
     opacity: 1,
-    backgroundColor: '#7738c7',
+    backgroundColor: '#ffe300',
   },
   itemText: {
     maxWidth: '80%',
@@ -55,9 +55,12 @@ const styles = StyleSheet.create({
   circular: {
     width: 12,
     height: 12,
-    borderColor: '#7738c7',
-    borderWidth: 2,
     borderRadius: 5,
+    borderWidth: 2,
+    borderColor: '#E8E8E8',
+  },
+  completedCircularBorder: {
+    borderColor: '#ffe300',
   },
 });
 

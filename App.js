@@ -1,42 +1,23 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { AntDesign, MaterialIcons } from '@expo/vector-icons';
+import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from './src/screens/HomeScreen';
 import AddTaskScreen from './src/screens/AddTaskScreen';
 import CompletedTasksScreen from './src/screens/CompletedTasksScreen';
-
-const Tab = createBottomTabNavigator();
+import IncompleteTasksScreen from './src/screens/IncompleteTasksScreen';
+import MemberScreen from './src/screens/MemberScreen';
+const Stack = createStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ color, size }) => {
-            let iconName;
-
-            if (route.name === 'Home') {
-              iconName = 'home';
-              return <AntDesign name={iconName} size={size} color={color} />;
-            } else if (route.name === 'AddTask') {
-              iconName = 'format-list-bulleted';
-              return <MaterialIcons name={iconName} size={size} color={color} />;
-            } else if (route.name === 'CompletedTasks') {
-              iconName = 'check';
-              return <AntDesign name={iconName} size={size} color={color} />;
-            }
-          },
-        })}
-        tabBarOptions={{
-          activeTintColor: '#7738c7',
-          inactiveTintColor: 'gray',
-        }}
-      >
-        <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
-        <Tab.Screen name="AddTask" component={AddTaskScreen} options={{ tabBarLabel: 'Novas Tarefas' }} />
-        <Tab.Screen name="CompletedTasks" component={CompletedTasksScreen} options={{ tabBarLabel: 'Concluídas' }} />
-      </Tab.Navigator>
+      <Stack.Navigator>
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="AddTask" component={AddTaskScreen} />
+        <Stack.Screen name="CompletedTasks" component={CompletedTasksScreen} />
+        <Stack.Screen name="IncompleteTasks" component={IncompleteTasksScreen} />
+        <Stack.Screen name="Member" component={MemberScreen} />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
