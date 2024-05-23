@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { database, ref, onValue } from "../firebase";
 import { AntDesign } from '@expo/vector-icons';
 import Task from '../components/Task';
 
@@ -17,23 +17,16 @@ const CompletedTasksScreen = ({ navigation }) => {
 
   const loadCompletedTasks = async () => {
     try {
-      const savedTasks = await AsyncStorage.getItem('tasks');
-      if (savedTasks !== null) {
-        const tasks = JSON.parse(savedTasks);
-        const completed = tasks.filter(task => task.completed); // Tarefas concluídas
-        setCompletedTasks(completed);
-      }
+      const tasksRef = ref(database, 'tasks');
+      onValue(tasksRef, (snapshot) => {
+        const tasks = snapshot.val();
+        if (tasks !== null) {
+          const completed = tasks.filter(task => task.completed); // Tarefas concluídas
+          setCompletedTasks(completed);
+        }
+      });
     } catch (error) {
-      console.error('Erro ao carregar as tarefas:', error);
-    }
-  };
-
-  const updateCompletedTasks = async (tasks) => {
-    try {
-      const completed = tasks.filter(task => task.completed);
-      setCompletedTasks(completed);
-    } catch (error) {
-      console.error('Erro ao atualizar as tarefas concluídas:', error);
+      console.error('Erro ao carregar as tarefas concluídas:', error);
     }
   };
 
