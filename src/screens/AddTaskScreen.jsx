@@ -3,7 +3,6 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Keyboard
 import { AntDesign } from '@expo/vector-icons';
 import Task from '../components/Task';
 import { saveTask, listTasks, updateTask, deleteTask } from '../firebase';
-import axios from 'axios';
 
 const AddTaskScreen = ({ navigation }) => {
   const [task, setTask] = useState('');
@@ -13,7 +12,6 @@ const AddTaskScreen = ({ navigation }) => {
 
   useEffect(() => {
     loadTasksFromFirebase();
-    fetchApiData();
   }, []);
 
   const loadTasksFromFirebase = async () => {
@@ -22,16 +20,6 @@ const AddTaskScreen = ({ navigation }) => {
       setTaskItems(tasks);
     } catch (error) {
       console.error('Erro ao carregar as tarefas do Firebase:', error);
-    }
-  };
-
-  const fetchApiData = async () => {
-    try {
-      const response = await axios.get('https://api.example.com/tasks');
-      console.log('API Data:', response.data);
-      // Process the API response and update state as needed
-    } catch (error) {
-      console.error('Erro ao buscar dados da API:', error);
     }
   };
 
