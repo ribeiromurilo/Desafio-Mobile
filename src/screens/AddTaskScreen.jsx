@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, KeyboardAvoidingView, Alert } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Task from '../components/Task';
+import { saveTask, listTasks, updateTask, deleteTask } from '../firebase';
+import axios from 'axios';
 
 const AddTaskScreen = ({ navigation }) => {
   const [task, setTask] = useState('');
@@ -11,69 +12,90 @@ const AddTaskScreen = ({ navigation }) => {
   const [lastPress, setLastPress] = useState(0);
 
   useEffect(() => {
-    loadTasks();
+    loadTasksFromFirebase();
+    fetchApiData();
   }, []);
 
-  const saveTasks = async (tasks) => {
+  const loadTasksFromFirebase = async () => {
     try {
-      await AsyncStorage.setItem('tasks', JSON.stringify(tasks));
+      const tasks = await listTasks();
+      setTaskItems(tasks);
     } catch (error) {
-      console.error('Erro ao salvar as tarefas:', error);
+      console.error('Erro ao carregar as tarefas do Firebase:', error);
     }
   };
 
-  const loadTasks = async () => {
+  const fetchApiData = async () => {
     try {
-      const savedTasks = await AsyncStorage.getItem('tasks');
-      if (savedTasks !== null) {
-        setTaskItems(JSON.parse(savedTasks));
-      }
+      const response = await axios.get('https://api.example.com/tasks');
+      console.log('API Data:', response.data);
+      // Process the API response and update state as needed
     } catch (error) {
-      console.error('Erro ao carregar as tarefas:', error);
+      console.error('Erro ao buscar dados da API:', error);
     }
   };
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     if (task.trim() === '') {
       return;
     }
 
-    const newTaskItems = [...taskItems, { text: task, completed: false }];
-    setTaskItems(newTaskItems);
-    saveTasks(newTaskItems);
-    setTask('');
+    const taskId = await saveTask({ text: task, completed: false });
+    if (taskId) {
+      setTaskItems([...taskItems, { id: taskId, text: task, completed: false }]);
+      setTask('');
+    } else {
+      Alert.alert('Erro', 'Não foi possível salvar a tarefa.');
+    }
   };
 
-  const toggleTaskCompletion = async (index) => {
-    const newTaskItems = [...taskItems];
-    newTaskItems[index].completed = !newTaskItems[index].completed;
-    setTaskItems(newTaskItems);
-    saveTasks(newTaskItems);
+  const toggleTaskCompletion = async (taskId) => {
+    const updatedTasks = taskItems.map(task => {
+      if (task.id === taskId) {
+        return { ...task, completed: !task.completed };
+      }
+      return task;
+    });
+    setTaskItems(updatedTasks);
+    await updateTask(taskId, { completed: !taskItems.find(item => item.id === taskId).completed });
   };
 
-  const handleDeleteTask = async (index) => {
-    const newTaskItems = [...taskItems];
-    newTaskItems.splice(index, 1);
-    setTaskItems(newTaskItems);
-    saveTasks(newTaskItems);
+  const handleDeleteTask = async (taskId) => {
+    const confirmed = await new Promise((resolve) =>
+      Alert.alert(
+        'Confirmar exclusão',
+        'Tem certeza de que deseja excluir esta tarefa?',
+        [
+          { text: 'Cancelar', onPress: () => resolve(false), style: 'cancel' },
+          { text: 'Excluir', onPress: () => resolve(true) }
+        ],
+        { cancelable: true }
+      )
+    );
+
+    if (confirmed) {
+      const updatedTasks = taskItems.filter(task => task.id !== taskId);
+      setTaskItems(updatedTasks);
+      await deleteTask(taskId);
+    }
   };
 
-  const handlePressTask = (index) => {
+  const handlePressTask = (taskId) => {
     const now = new Date().getTime();
     const DOUBLE_PRESS_DELAY = 300;
 
-    if (clickedTaskIndex === index && now - lastPress < DOUBLE_PRESS_DELAY) {
-      handleDeleteTask(index);
+    if (clickedTaskIndex === taskId && now - lastPress < DOUBLE_PRESS_DELAY) {
+      handleDeleteTask(taskId);
       setClickedTaskIndex(null);
     } else {
-      toggleTaskCompletion(index);
-      setClickedTaskIndex(index);
+      toggleTaskCompletion(taskId);
+      setClickedTaskIndex(taskId);
       setLastPress(now);
     }
   };
 
-  const renderItem = ({ item, index }) => (
-    <TouchableOpacity onPress={() => handlePressTask(index)} onLongPress={() => handleDeleteTask(index)}>
+  const renderItem = ({ item }) => (
+    <TouchableOpacity onPress={() => handlePressTask(item.id)} onLongPress={() => handleDeleteTask(item.id)}>
       <Task text={item.text} completed={item.completed} />
     </TouchableOpacity>
   );
@@ -87,7 +109,7 @@ const AddTaskScreen = ({ navigation }) => {
       <FlatList
         data={taskItems}
         renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item.id}
         style={styles.tasksWrapper}
       />
       <View style={styles.inputWrapper}>
